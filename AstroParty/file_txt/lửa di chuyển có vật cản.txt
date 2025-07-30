@@ -1,0 +1,167 @@
+import pygame
+
+class Player(pygame.sprite.Sprite):
+    def __init__(self, fire,fire2, groups,barriers):
+        super().__init__(groups)
+        self.image = pygame.image.load(r'D:\python\lesson1\assets\tau1.png').convert_alpha()
+        self.rect = self.image.get_rect(center=(WINDOW_WIDTH / 2 -100, WINDOW_HEIGHT / 2))
+        self.direction = pygame.Vector2()
+        self.speed = 300
+        self.fire = fire  # Gán đối tượng fire cho thuộc tính của Player
+        self.fire2 = fire2 
+        self.barriers = barriers  # Danh sách các vật cản (pygame.Rect) 
+
+    def update(self, dt):
+        keys = pygame.key.get_pressed()
+        self.direction.x = int(keys[pygame.K_RIGHT]) - int(keys[pygame.K_LEFT])
+        self.direction.y = int(keys[pygame.K_DOWN]) - int(keys[pygame.K_UP])
+        self.direction = self.direction.normalize() if self.direction else self.direction
+        # Tính toán vị trí tiếp theo của máy bay
+        next_position = self.rect.move(self.direction * self.speed * dt)
+
+        # Kiểm tra va chạm với các vật cản
+        collision = False
+        for barrier in self.barriers:
+            if next_position.colliderect(barrier):
+                collision = True
+                break
+
+        # Nếu không có va chạm, cập nhật vị trí của máy bay
+        if not collision:
+            self.rect.center += self.direction * self.speed * dt
+
+        # Cập nhật vị trí của lửa để lửa di chuyển theo máy bay
+        self.fire.update_position(self.rect.midbottom + pygame.Vector2(-5, 20))
+        self.fire2.update_position(self.rect.midbottom + pygame.Vector2(5, 20))
+
+        # Cập nhật lửa để kiểm tra va chạm với vật cản
+        self.fire.update(dt)
+        self.fire2.update(dt)
+
+class Fire(pygame.sprite.Sprite):
+    def __init__(self, sprite_images, pos,  groups,barriers):
+        super().__init__(groups)
+        self.sprite_images = sprite_images
+        self.image = self.sprite_images[0]
+        self.rect = self.image.get_rect(midbottom=pos)
+        self.last_update_time = pygame.time.get_ticks()
+        self.current_frame = 0
+        self.barriers = barriers  # Danh sách các vật cản (pygame.Rect)
+    
+    def update(self, dt):
+        # Cập nhật hoạt ảnh
+        frame_rate = 120
+        frame_duration = 1000 // frame_rate
+        now = pygame.time.get_ticks()
+        if now - self.last_update_time > frame_duration:
+            self.current_frame = (self.current_frame + 1) % len(self.sprite_images)
+            self.image = self.sprite_images[self.current_frame]
+            self.last_update_time = now
+
+    def update_position(self, pos):
+        self.rect.midbottom = pos
+
+
+
+pygame.init()
+WINDOW_WIDTH, WINDOW_HEIGHT = 800, 700
+display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+pygame.display.set_caption('Space Shooter')
+running = True
+
+clock = pygame.time.Clock()
+
+sprite_images = [
+    pygame.image.load(r'D:\python\lesson1\assets\fire1-1.png'),
+    pygame.image.load(r'D:\python\lesson1\assets\fire1-2.png'),
+    pygame.image.load(r'D:\python\lesson1\assets\fire1-3.png'),
+    pygame.image.load(r'D:\python\lesson1\assets\fire1-4.png'),
+    pygame.image.load(r'D:\python\lesson1\assets\fire1-5.png'),
+    pygame.image.load(r'D:\python\lesson1\assets\fire1-6.png'),
+    pygame.image.load(r'D:\python\lesson1\assets\fire1-7.png')
+]
+
+barriers = [
+    pygame.Rect(380, 0, 40, 100),   # Hình chữ nhật ở trên cùng
+    pygame.Rect(380, 600, 40, 100), # Hình chữ nhật ở dưới cùng
+    pygame.Rect(700, 330, 100, 40), # Hình chữ nhật ở bên phải
+    pygame.Rect(0, 330, 100, 40),   # Hình chữ nhật ở bên trái
+    pygame.Rect(240, 175, 40, 80),  # Hình chữ nhật khác
+    pygame.Rect(200, 215, 80, 40),  # Hình chữ nhật khác
+    pygame.Rect(520, 175, 40, 80),  # Hình chữ nhật khác
+    pygame.Rect(520, 215, 80, 40),  # Hình chữ nhật khác
+    pygame.Rect(240, 445, 40, 80),  # Hình chữ nhật khác
+    pygame.Rect(200, 445, 80, 40),  # Hình chữ nhật khác
+    pygame.Rect(520, 445, 40, 80),  # Hình chữ nhật khác
+    pygame.Rect(520, 445, 80, 40),  # Hình chữ nhật khác
+   
+]
+
+
+# General setup
+
+# Tạo nhóm sprite
+all_sprites = pygame.sprite.Group()
+
+# Tạo đối tượng lửa
+fire = Fire(sprite_images=sprite_images, pos=(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2),  groups=all_sprites, barriers=barriers)
+fire2 = Fire(sprite_images=sprite_images, pos=(WINDOW_WIDTH / 2 , WINDOW_HEIGHT / 2), groups=all_sprites, barriers=barriers)
+
+
+# Tạo đối tượng người chơi
+player = Player(fire, fire2,all_sprites,barriers)
+
+# Vòng lặp chính của trò chơi
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # Tính toán thời gian trôi qua
+    dt = clock.tick(30) / 1000  # Thay đổi 30 FPS thành delta time
+
+    # Cập nhật tất cả các sprite
+    all_sprites.update(dt)
+
+    # Vẽ lên màn hình
+    display_surface.fill('darkgray')
+    # Vẽ biên và các vật thể
+    pygame.draw.line(display_surface, (255, 0, 0), (0, 0), (800, 0), width=10) 
+    pygame.draw.line(display_surface, (255, 0, 0), (0, 700), (800, 700), width=10)
+    pygame.draw.line(display_surface, (255, 0, 0), (0, 0), (0, 700), width=10)
+    pygame.draw.line(display_surface, (255, 0, 0), (800, 0), (800, 700), width=10)
+
+    for barrier in barriers:
+        pygame.draw.rect(display_surface, (250, 0, 0), barrier, 5)
+ # Các hình chữ nhật và vòng tròn
+ # vẽ hình chữ nhật ở trên cùng chính giữa 
+    #pygame.draw.rect(display_surface,(250,0,0),(380,0,40,100),5)
+    
+   # vẽ hình chữ nhật ở dưới cùng chính giữa
+    #pygame.draw.rect(display_surface,(250,0,0),(380,600,40,100),5)
+    
+#vẽ hình chữ nhật ở bên phải chính giữa
+    #pygame.draw.rect(display_surface,(250,0,0),(700,330,100,40),5)
+    
+#vẽ hình chữ nhật ở bên trái chính giữa
+    #pygame.draw.rect(display_surface,(250,0,0),(0,330,100,40),5)
+
+
+   
+    pygame.draw.rect(display_surface, (250, 0, 0), (240, 175, 40, 80), 5)
+    pygame.draw.rect(display_surface, (250, 0, 0), (200, 215, 80, 40), 5)
+
+    pygame.draw.rect(display_surface, (250, 0, 0), (520, 175, 40, 80), 5)
+    pygame.draw.rect(display_surface, (250, 0, 0), (520, 215, 80, 40), 5)
+    pygame.draw.rect(display_surface, (250, 0, 0), (240, 445, 40, 80), 5)
+    pygame.draw.rect(display_surface, (250, 0, 0), (200, 445, 80, 40), 5)
+    pygame.draw.rect(display_surface, (250, 0, 0), (520, 445, 40, 80), 5)
+    pygame.draw.rect(display_surface, (250, 0, 0), (520, 445, 80, 40), 5)
+
+    pygame.draw.circle(display_surface, (244, 164, 96), (400, 350), 53, 5)
+    pygame.draw.circle(display_surface, (250, 0, 0), (400, 350), 50, 2)
+    pygame.draw.circle(display_surface, (250, 0, 0), (400, 350), 56, 2)
+    all_sprites.draw(display_surface)
+    pygame.display.update()
+
+pygame.quit()

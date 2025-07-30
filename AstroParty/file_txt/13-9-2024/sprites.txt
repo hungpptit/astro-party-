@@ -1,0 +1,16 @@
+
+from settings import *  # Giả sử bạn đã khai báo 'screen' trong settings.py hoặc import ở đây
+
+class CollisionSprite(pygame.sprite.Sprite):
+    def __init__(self, pos, size, groups):
+        super().__init__(groups)
+        self.image = pygame.Surface(size, pygame.SRCALPHA)  # Thay đổi để sử dụng alpha
+        self.rect = self.image.get_rect(center=pos)
+        self.size = size
+        self.border_color = (250, 0, 0)  # Màu viền
+        self.border_width = 5  # Độ dày của viền
+
+    def update(self):
+        self.image.fill((0, 0, 0, 0))  # Xóa hình ảnh hiện tại
+        # Vẽ hình chữ nhật với viền
+        pygame.draw.rect(self.image, self.border_color, pygame.Rect((0, 0), self.size), self.border_width)

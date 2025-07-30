@@ -1,0 +1,31 @@
+from settings import*
+
+
+class Fire(pygame.sprite.Sprite):
+    def __init__(self,sprite_images, pos, groups,barriers):
+        super().__init__(groups)
+       
+        self.sprite_images = sprite_images  # Nhận sprite_images làm tham số
+        self.image = self.sprite_images[0]
+        self.rect = self.image.get_rect(midbottom=pos)
+        self.last_update_time = pygame.time.get_ticks()
+        self.current_frame = 0
+        self.barriers = barriers  # Danh sách các vật cản (pygame.Rect)
+    
+    
+    def update(self):
+        # Cập nhật hoạt ảnh
+        frame_rate = 120
+        frame_duration = 1000 // frame_rate
+        now = pygame.time.get_ticks()
+        if now - self.last_update_time > frame_duration:
+            self.current_frame = (self.current_frame + 1) % len(self.sprite_images)
+            self.image = self.sprite_images[self.current_frame]
+            self.last_update_time = now
+         # Cập nhật vị trí để di chuyển
+        #self.rect.y += self.speed  # Di chuyển xuống dưới mỗi lần update
+
+    def update_position(self, pos):
+        self.rect.midbottom = pos
+        # # Debug log
+        # print(f"Fire Updated Position: {self.rect.midbottom}")

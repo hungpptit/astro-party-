@@ -1,0 +1,65 @@
+from settings import *
+from Fire import *
+
+class Player1(pygame.sprite.Sprite):
+    def __init__(self, fire,fire2, groups,collision_sprites):
+        super().__init__(groups)
+        self.image = pygame.image.load(r'D:\python\lesson1\assets\tau1.png').convert_alpha()
+        self.image = pygame.transform.scale2x(self.image)
+        self.rect = self.image.get_rect(center=(100, 600))
+        # xóa khoảng trắng chiếm vị trí xung quanh đối tượng , làm cho hình ảnh va chạm nhỏ hơn ảnh ta nhìn thấy
+        self.hitbox_rect = self.rect.inflate(-40,0)
+        self.fire = fire  # Gán đối tượng fire cho thuộc tính của Player
+        self.fire2 = fire2  
+        # self.collision_sprites = collision_sprites
+
+        self.direction = pygame.Vector2()
+        self.speed = 300
+        self.collision_sprites = collision_sprites
+
+    # di chuyển 
+    def input(self):
+        keys = pygame.key.get_pressed()
+        self.direction.x = int(keys[pygame.K_RIGHT]) - int(keys[pygame.K_LEFT])
+        self.direction.y = int(keys[pygame.K_DOWN]) - int(keys[pygame.K_UP])
+        self.direction = self.direction.normalize() if self.direction else self.direction
+
+
+    def move(self,dt):
+        self.rect.x += self.direction.x * self.speed * dt
+        self.collision('horizontal')
+        self.rect.y += self.direction.y * self.speed * dt
+        self.collision('vertical')
+
+    def collision(self, direction):
+        for sprite in self.collision_sprites:
+            if sprite.rect.colliderect(self.rect):
+                if direction == 'horizontal':
+                    if self.direction.x > 0:  # Di chuyển sang phải
+                        self.rect.right = sprite.rect.left  # Dừng ngay sát vật cản
+                    if self.direction.x < 0:  # Di chuyển sang trái
+                        self.rect.left = sprite.rect.right  # Dừng ngay sát vật cản
+                if direction == 'vertical':
+                    if self.direction.y > 0:  # Di chuyển xuống dưới
+                        self.rect.bottom = sprite.rect.top  # Dừng ngay sát vật cản
+                    if self.direction.y < 0:  # Di chuyển lên trên
+                        self.rect.top = sprite.rect.bottom  # Dừng ngay sát vật cản
+    
+
+    def update(self,dt):
+
+        #  # Cập nhật vị trí của lửa để lửa di chuyển theo máy bay
+        # fire_position = self.rect.midbottom + pygame.Vector2(-9, 15)
+        # fire2_position = self.rect.midbottom + pygame.Vector2(10, 15)
+        
+        # # Debug log
+        # print(f"Player Position: {self.rect.midbottom}")
+        # print(f"Fire Position: {fire_position}")
+        # print(f"Fire2 Position: {fire2_position}")
+    
+        # Cập nhật vị trí của lửa để lửa di chuyển theo máy bay
+        self.fire.update_position(self.rect.midbottom+ pygame.Vector2(-9, 15))
+        self.fire2.update_position(self.rect.midbottom + pygame.Vector2(10, 15))
+        
+        self.input()
+        self.move(dt)

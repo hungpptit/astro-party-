@@ -1,0 +1,53 @@
+Viết chương trình để kiểm tra xem một chuỗi có phải là mật khẩu hợp lệ hay không.
+Quy tắc mật khẩu:
+Mật khẩu phải có ít nhất mười ký tự.
+Mật khẩu chỉ bao gồm chữ cái và chữ số.
+Mật khẩu phải chứa ít nhất hai chữ số
+
+Ví dụ trường hợp kiểm tra:
+
+Trường hợp kiểm tra 1
+
+Đầu vào:
+
+abcdefg123
+
+Đầu ra:
+
+Đúng
+
+Trường hợp kiểm tra 2
+
+Đầu vào:
+
+abcdefg1ab
+
+Đầu ra:
+
+Sai
+
+
+
+def is_valid_password(password):
+    if len(password)< 10:
+        return False
+    
+    if not password.isalnum():
+        return False
+        
+    digit_counts = 0  
+    for char in password:
+        if char.isdigit():
+            digit_counts += 1
+    
+    if digit_counts < 2:
+        return False
+    return True
+
+if __name__ =="__main__":
+    password = input().strip()
+    
+    if is_valid_password(password):
+        print(True,end="")
+    else:
+        print(False,end="")

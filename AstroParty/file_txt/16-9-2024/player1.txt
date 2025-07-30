@@ -1,0 +1,48 @@
+from settings import *
+from Fire import *
+
+class Player1(pygame.sprite.Sprite):
+    def __init__(self, fire,fire2, groups,barriers):
+        super().__init__(groups)
+        self.image = pygame.image.load(r'D:\python\lesson1\assets\tau1.png').convert_alpha()
+        self.image = pygame.transform.scale2x(self.image)
+        self.rect = self.image.get_rect(center=(100, 600))
+        # xóa khoảng trắng chiếm vị trí xung quanh đối tượng , làm cho hình ảnh va chạm nhỏ hơn ảnh ta nhìn thấy
+        self.hitbox_rect = self.rect.inflate(-40,0)
+        self.fire = fire  # Gán đối tượng fire cho thuộc tính của Player
+        self.fire2 = fire2  
+        self.barriers = barriers  # Danh sách các vật cản (pygame.Rect) 
+        # self.collision_sprites = collision_sprites
+
+        self.direction = pygame.Vector2()
+        self.speed = 300
+
+    def update(self,dt):
+    # di chuyển 
+        keys = pygame.key.get_pressed()
+        self.direction.x = int(keys[pygame.K_RIGHT]) - int(keys[pygame.K_LEFT])
+        self.direction.y = int(keys[pygame.K_DOWN]) - int(keys[pygame.K_UP])
+        self.direction = self.direction.normalize() if self.direction else self.direction
+
+        # Tính toán vị trí tiếp theo của máy bay
+        next_position = self.rect.move(self.direction * self.speed * dt)
+
+        # Kiểm tra va chạm với các vật cản
+        collision = False
+        for barrier in self.barriers:
+            if next_position.colliderect(barrier):
+                collision = True
+                break
+
+        # Nếu không có va chạm, cập nhật vị trí của máy bay
+        if not collision:
+            self.rect.center += self.direction * self.speed * dt
+
+        # Cập nhật vị trí của lửa để lửa di chuyển theo máy bay
+        self.fire.update_position(self.rect.midbottom + pygame.Vector2(-10, 20))
+        self.fire2.update_position(self.rect.midbottom + pygame.Vector2(10, 20))
+
+        # Cập nhật lửa để kiểm tra va chạm với vật cản
+        # self.fire.update(dt)
+        # self.fire2.update(dt)
+        

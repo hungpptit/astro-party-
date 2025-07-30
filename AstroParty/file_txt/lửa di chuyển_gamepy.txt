@@ -1,0 +1,270 @@
+from typing import Any
+import pygame # type: ignore
+from random import randint
+import math
+
+
+
+class Player1(pygame.sprite.Sprite):
+    def __init__(self, fire,fire2, groups):
+        super().__init__(groups)
+        self.image = pygame.image.load(r'D:\python\lesson1\assets\tau1.png').convert_alpha()
+        self.rect = self.image.get_rect(center=(100, 600))
+        self.fire = fire  # Gán đối tượng fire cho thuộc tính của Player
+        self.fire2 = fire2 
+
+    def update(self):
+        # Cập nhật vị trí của lửa để lửa di chuyển theo máy bay
+        self.fire.update_position(self.rect.midbottom+ pygame.Vector2(-9, 32))
+        self.fire2.update_position(self.rect.midbottom + pygame.Vector2(10, 32))
+
+class Fire(pygame.sprite.Sprite):
+    def __init__(self,sprite_images, pos, groups):
+        super().__init__(groups)
+        self.sprite_images = sprite_images  # Nhận sprite_images làm tham số
+        self.image = self.sprite_images[0]
+        self.rect = self.image.get_rect(midbottom=pos)
+        self.last_update_time = pygame.time.get_ticks()
+        self.current_frame = 0
+    
+    
+    def update(self):
+        # Cập nhật hoạt ảnh
+        frame_rate = 120
+        frame_duration = 1000 // frame_rate
+        now = pygame.time.get_ticks()
+        if now - self.last_update_time > frame_duration:
+            self.current_frame = (self.current_frame + 1) % len(self.sprite_images)
+            self.image = self.sprite_images[self.current_frame]
+            self.last_update_time = now
+
+    def update_position(self, pos):
+        self.rect.midbottom = pos
+
+
+pygame.init()
+pygame.mixer.init()
+
+#===============================================================================
+# Tiêu đề và icon
+pygame.display.set_caption('Astro Party')
+icon = pygame.image.load(r'D:\python\lesson1\assets\11.png')
+pygame.display.set_icon(icon)
+
+angle = 0
+#===============================================================================
+# Thêm ảnh background cho game
+bg = pygame.image.load(r'D:\python\lesson1\assets\12_1.jpg')
+bg = pygame.transform.scale2x(bg)
+bg_x = 0
+#===============================================================================
+# thêm ảnh background menu
+bg_menu = pygame.image.load(r'D:\python\lesson1\assets\12_1.jpg')
+bg_menu = pygame.transform.scale2x(bg_menu)
+#===============================================================================
+WINDOW_WIDTH, WINDOW_HEIGHT = 800,700
+# Tạo cửa sổ game mới
+screen = pygame.display.set_mode((800, 700))
+#===============================================================================
+# Khởi tạo trạng thái trò chơi
+state = "menu"  # Trạng thái ban đầu là menu chính
+music_playing = False  # Biến kiểm tra trạng thái nhạc
+#===============================================================================
+# Font chữ
+font_path = r'D:\python\lesson1\04B_19.TTF'
+font_start = pygame.font.Font(font_path,30)
+font_titles = pygame.font.Font(font_path,70)
+#===============================================================================
+# Màu sắc
+WHITE = (255, 255, 255)
+BLUE = (0, 0, 255)
+#===============================================================================
+
+# tạo âm thanh menu chờ
+pygame.mixer.music.load(r'D:\python\lesson1\sound\menu1.wav')
+#===============================================================================
+ # Đưa máy bay vào 
+    # máy bay 1
+plant_1 = pygame.image.load(r'D:\python\lesson1\assets\tau1.png')
+plant_1 = pygame.transform.scale2x(plant_1)
+plant_rect_1 = plant_1.get_rect(center=(100, 600))
+
+# máy bay 2
+plant_2 = pygame.image.load(r'D:\python\lesson1\assets\tau2.png')
+plant_2 = pygame.transform.scale2x(plant_2)
+plant_rect_2 = plant_2.get_rect(center=(100, 100))
+
+# máy bay 3
+plant_3 = pygame.image.load(r'D:\python\lesson1\assets\tau3.png')
+plant_3 = pygame.transform.scale2x(plant_3)
+plant_rect_3 = plant_3.get_rect(center=(600, 600))
+    
+#máy bay 4
+plant_4 = pygame.image.load(r'D:\python\lesson1\assets\tau4.png')
+plant_4 = pygame.transform.scale2x(plant_4)
+plant_rect_4 = plant_4.get_rect(center=(600, 100))
+
+# đưa tank vào 
+#tank1 = pygame.image.load(r'D:\python\lesson1\assets\14_1.png')
+#tank1 = pygame.transform.scale2x(tank1)
+# laser
+fire_surf = pygame.image.load(r'D:\python\lesson1\assets\laser1.png').convert_alpha()
+#===============================================================================
+# tạo lửa cho máy bay
+sprite_images = [
+    pygame.image.load(r'D:\python\lesson1\assets\fire1-1.png'),
+    pygame.image.load(r'D:\python\lesson1\assets\fire1-2.png'),
+    pygame.image.load(r'D:\python\lesson1\assets\fire1-3.png'),
+    pygame.image.load(r'D:\python\lesson1\assets\fire1-4.png'),
+    pygame.image.load(r'D:\python\lesson1\assets\fire1-5.png'),
+    pygame.image.load(r'D:\python\lesson1\assets\fire1-6.png'),
+    pygame.image.load(r'D:\python\lesson1\assets\fire1-7.png')
+]
+
+
+#===============================================================================
+
+# Hàm hiển thị màn hình menu
+def main_menu():
+    global music_playing
+    if not music_playing:  # Nếu nhạc chưa phát, bắt đầu phát nhạc
+        pygame.mixer.music.play(-1)  # Thêm tham số -1 để lặp lại nhạc
+        music_playing = True  # Đánh dấu là nhạc đang phát
+    # Di chuyển nền
+    global bg_x
+    bg_x -= 0.5
+    screen.blit(bg_menu, (bg_x, -300))  
+    screen.blit(bg_menu, (bg_x + 1600, -300))  # Lặp lại hình nền
+
+    if bg_x <= -3000:
+        bg_x = 0
+    text_menu = font_titles.render("Astro Party", True,(255,165,0))
+    screen.blit(text_menu, (200, 100))
+    # Lấy thời gian hiện tại
+    current_time = pygame.time.get_ticks()
+
+    # Cứ mỗi 500ms (0.5 giây), chữ sẽ bật hoặc tắt
+    if (current_time // 500) % 2 == 0:
+        text = font_start.render("Press 'SPACE' to Start", True,(255,255,0))
+        screen.blit(text, (230, 600))
+
+    # đưa logo vào giữa màn hình
+    plant_menu = pygame.image.load(r'D:\python\lesson1\assets\14_5.png')
+    plant_menu = pygame.transform.scale2x(plant_menu)
+    screen.blit(plant_menu, (250, 200))
+#===============================================================================
+
+
+#===============================================================================
+# Hàm hiển thị màn hình game over  (chưa xong )
+def game_over():
+    Screen_over = pygame.image.load(r'D:\python\lesson1\assets\over1.png')
+    Screen_over = pygame.transform.scale2x(Screen_over)
+    #Screen_over_circle = plant.get_rect(center=(400, 200))
+
+#===============================================================================
+all_sprites = pygame.sprite.Group()
+
+
+
+fire = Fire(sprite_images=sprite_images, pos=(100 / 2, 600 / 2), groups=all_sprites)
+fire2 = Fire(sprite_images=sprite_images, pos=(100 / 2 , 600 / 2), groups=all_sprites)
+player = Player1(fire,fire2, groups=all_sprites)
+
+
+
+# Hàm hiển thị màn hình chơi game
+def game_screen():
+    global angle, current_frame, last_update_time
+    dt = clock.tick(30) / 1000
+    # Di chuyển nền
+    global bg_x
+    bg_x -= 0.3
+    screen.blit(bg, (bg_x, -300))  
+    screen.blit(bg, (bg_x + 1600, -300))  # Lặp lại hình nền
+
+    if bg_x <= -3000:
+        bg_x = 0
+
+    # Cập nhật hoạt ảnh lửa
+    # Cập nhật tất cả các đối tượng sprite
+    #all_sprites.update()
+    
+    # Vẽ tất cả các đối tượng sprite lên màn hình   
+    #all_sprites.draw(screen)
+
+
+    # vẽ hình lửa
+
+    # Vẽ biên và các vật thể
+    pygame.draw.line(screen, (255, 0, 0), (0, 0), (800, 0), width=10) 
+    pygame.draw.line(screen, (255, 0, 0), (0, 700), (800, 700), width=10)
+    pygame.draw.line(screen, (255, 0, 0), (0, 0), (0, 700), width=10)
+    pygame.draw.line(screen, (255, 0, 0), (800, 0), (800, 700), width=10)
+
+    # Các hình chữ nhật và vòng tròn
+    # vẽ hình chữ nhật ở trên cùng chính giữa 
+    pygame.draw.rect(screen,(250,0,0),(380,0,40,100),5)
+    
+    # vẽ hình chữ nhật ở dưới cùng chính giữa
+    pygame.draw.rect(screen,(250,0,0),(380,600,40,100),5)
+    
+    #vẽ hình chữ nhật ở bên phải chính giữa
+    pygame.draw.rect(screen,(250,0,0),(700,330,100,40),5)
+    
+    #vẽ hình chữ nhật ở bên trái chính giữa
+    pygame.draw.rect(screen,(250,0,0),(0,330,100,40),5)
+
+
+   
+    pygame.draw.rect(screen, (250, 0, 0), (240, 175, 40, 80), 5)
+    pygame.draw.rect(screen, (250, 0, 0), (200, 215, 80, 40), 5)
+
+    pygame.draw.rect(screen, (250, 0, 0), (520, 175, 40, 80), 5)
+    pygame.draw.rect(screen, (250, 0, 0), (520, 215, 80, 40), 5)
+
+    pygame.draw.rect(screen, (250, 0, 0), (240, 445, 40, 80), 5)
+    pygame.draw.rect(screen, (250, 0, 0), (200, 445, 80, 40), 5)
+
+    pygame.draw.rect(screen, (250, 0, 0), (520, 445, 40, 80), 5)
+    pygame.draw.rect(screen, (250, 0, 0), (520, 445, 80, 40), 5)
+
+    pygame.draw.circle(screen, (244, 164, 96), (400, 350), 53, 5)
+    pygame.draw.circle(screen, (250, 0, 0), (400, 350), 50, 2)
+    pygame.draw.circle(screen, (250, 0, 0), (400, 350), 56, 2)
+    
+
+    # Vẽ máy bay
+    screen.blit(plant_1, plant_rect_1)
+    screen.blit(plant_2, plant_rect_2)
+    screen.blit(plant_3, plant_rect_3)
+    screen.blit(plant_4, plant_rect_4)
+    dt = clock.tick(30) / 1000
+    all_sprites.update()
+    all_sprites.draw(screen)
+
+# Vòng lặp xử lý game
+running = True
+
+clock = pygame.time.Clock()
+
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE and state == "menu":
+                pygame.mixer.music.stop()  # Dừng nhạc khi vào chơi game
+                state = "playing"  # Chuyển trạng thái khi nhấn 'SPACE'
+        #if event.type == pygame.MOUSEMOTION:
+            #plant_rect_1.center = event.pos 
+    # Kiểm tra trạng thái và hiển thị màn hình tương ứng
+    if state == "menu":
+        main_menu()
+    elif state == "playing":
+        game_screen()
+        
+    # Cập nhật màn hình
+    pygame.display.update()
+
+pygame.quit()

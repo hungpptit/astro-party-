@@ -1,0 +1,56 @@
+from settings import*
+from laser import *
+class Player0(pygame.sprite.Sprite):
+    def __init__(self,groups,collision_sprites):
+        super().__init__(groups)
+        self.image = pygame.image.load(r'D:\python\lesson1\assets\14_1.png').convert_alpha()
+        self.image = pygame.transform.scale2x(self.image)
+        self.original_image = self.image  # Lưu lại hình ảnh gốc để quay
+        self.rect = self.image.get_rect(center=(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2))
+        self.center = self.rect.center  # Lưu lại vị trí trung tâm ban đầu self.center = self.rect.center  # Lưu lại vị trí trung tâm ban đầu
+        self.angle = 0  # Góc quay
+        self.rotation_speed = 50  # Tốc độ góc quay
+        self.collision_sprites = collision_sprites
+
+
+
+        # Cooldown for shooting
+        self.can_shoot = True
+        self.laser_shoot_time = 0
+        self.cooldown_duration = 200
+
+    
+
+    def fire_timer(self):
+        if not self.can_shoot:
+            current_time = pygame.time.get_ticks()
+            if current_time - self.laser_shoot_time >= self.cooldown_duration:
+                self.can_shoot = True
+
+
+    def update(self, dt):
+        # Xoay máy bay như trước
+        self.angle -= self.rotation_speed * dt
+        
+        # Xoay hình ảnh và giữ nguyên vị trí trung tâm
+        rotated_image = pygame.transform.rotate(self.original_image, self.angle)
+        self.image = rotated_image
+        self.rect = self.image.get_rect(center=self.center)
+
+        # Khoảng cách từ tâm đến đầu máy bay
+        distance_to_head = self.rect.height / 2
+
+        # Tính toán vị trí của đầu máy bay
+        head_x = self.rect.centerx + distance_to_head * math.cos(math.radians(self.angle + 90))
+        head_y = self.rect.centery + distance_to_head * math.sin(math.radians(self.angle +90 ))
+
+        # Xử lý bắn
+        recent_keys = pygame.key.get_pressed()
+        if recent_keys[pygame.K_SPACE] and self.can_shoot:
+            #Laser(laser_surf, (head_x, head_y), self.angle, all_sprites)  # Truyền góc xoay vào
+            self.can_shoot = False
+            self.laser_shoot_time = pygame.time.get_ticks()
+        
+        self.fire_timer()
+
+
